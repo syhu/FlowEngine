@@ -174,6 +174,17 @@ function add_flow() {
 
 function save_flow() {
 	alert('save flow');
+	console.log(doc);
+	
+	SR.API.SAVE_DOCUMENT({doc: doc}, function (err, result) {
+		if (err) {
+			alert(err);
+			console.error(err);
+			return;
+		}
+		
+		console.log(result);
+	});
 }
 
 var updateRole = function (flow_idx, role_idx) {
@@ -206,6 +217,32 @@ function add_role(flow_idx) {
 	doc.flow_list[flow_idx].addRole('');
 }
 
+function list_document () {
+
+	SR.API.LIST_DOCUMENT(function (err, result) {
+		if (err) {
+			alert(err);
+			return;
+		}
+		
+		var doc_list = document.getElementById("doc_list");
+		for (var i=0; i < result.length; i++) {
+			doc_list.innerHTML += ('<a href="javascript: show_document(\'' + result[i] + '\')">' + result[i] + '</a><br>');
+		}
+	})
+}
+
+function show_document(form_id) {
+
+	alert('show content for: ' + form_id);
+	
+	SR.API.GET_DOCUMENT({form_id: form_id}, function (err, result) {
+		if (err) {
+			return alert(err);
+		}
+		console.log(result);
+	})
+}
 
 
 </script>
@@ -236,15 +273,14 @@ Form_ID: <input type="text" value="" id="formID"><br>
 <div id="flow">
 <a href="javascript:add_flow();">Add Flow</a>
 <a href="javascript:save_flow();">Save Flow</a>
+<a href="javascript:list_document();">List Document</a>
 </div>
 
 <p>
+
+Document List
+<div id='doc_list'></div>
 	
-Local account: <input type="text" value="" id="local_account">
-Password: <input type="text" value="" id="local_password">
-Server: <input type="text" value="" id="server">
-<a href="javascript:add_account()">Add Account</a><br>
-<p>
 
 </form>
 </body>

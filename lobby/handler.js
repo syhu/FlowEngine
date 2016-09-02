@@ -81,36 +81,66 @@ l_handlers.TEST_SESSION = function (event) {
 	event.done('TEST_SESSION_REPLY', {result: true, msg: 'you can modify this', name: 'johnny'});
 }
 
+SR.API.add('GET_DOCUMENT', {
+	form_id: 'string'
+}, function (args, onDone) {
+	if (l_documents.hasOwnProperty(args.form_id)) {
+		onDone(null, l_documents[args.form_id].doc);
+	} else {
+		onDone('invalid form_id: ' + args.form_id);
+	}
+});
+
+SR.API.add('LIST_DOCUMENT', function (args, onDone) {
+	var list = Object.keys(l_documents);
+	list.splice(list.indexOf('add'), 1);
+	list.splice(list.indexOf('remove'), 1);
+	
+	onDone(null, list);
+});
+
+SR.API.add('SAVE_DOCUMENT', {
+	doc: 'object'
+}, function (args, onDone) {
+	
+	LOG.warn(args);
+	
+	l_documents.add({
+		form_id: args.doc.content.form_id,
+		doc: args.doc
+	}, function (err, result) {
+		if (err) {
+			LOG.error(err);
+			return onDone(err);
+		}
+		
+		LOG.warn(l_documents);
+		onDone(null, 'save success');
+	})
+	
+})
+
 //
 // system events
 //
 
-var l_person = {};
+var l_documents = {};
 
 SR.Callback.onStart(function () {
 
 	SR.DS.init({
 		models: {
-			'Person': {
-				id:	'string', // 身份證字號
-				uid:	'number', // 系統編號
-				person_id:	'string', // 學員代碼
-				RFID_id:	'string', // RFID 代碼
-				basic: 'object', // 基本資料
-				contact:	'object', // 連絡
-				delete_time:	'number', // 刪除時間
-				class_info:	'object', // 母班
-				learning:	'object', // 淨智學經歷
-				memo:	'object', // 備註
-				intro:	'object', // 介紹人
-				region:	'object', // 區域
-				care_history:	'object', // 關懷記錄
+			'Document': {
+				form_id:	'string',
+				doc:		'object'
+				//content: 	'object',
+				//flow_list: 	'object'
 			},	
 		},
 		caches: {
-			'Person': {
-				key: 'id',
-				map: l_person
+			'Document': {
+				key: 'form_id',
+				map: l_documents
 			},
 		}
 	}, function (err) {
@@ -118,8 +148,7 @@ SR.Callback.onStart(function () {
 			LOG.error(err, l_name);
 		}
 		
-		LOG.warn('l_person inited with size: ' + (Object.keys(l_person).length - 2));
-		//LOG.warn(l_person);
+		LOG.warn('l_documents inited with size: ' + (Object.keys(l_documents).length - 2));
 	});
 
 });

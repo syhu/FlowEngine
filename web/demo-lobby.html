@@ -128,48 +128,82 @@ function add_account() {
 	SR.login('addlocal', {account: accountField.value, local_account: {account: account, password: password, server: server}}, onResponse);
 }
 
-var flow_list = [];
+var doc = undefined;
+
+function Document (form_id) {
+	this.flow_list = [];
+	this.content = {form_id: form_id};
+	
+	this.addFlow = function (flow) {
+		this.flow_list.push(flow);
+	}
+}
 
 function Flow () {
 	this.roles = [];
 	this.states = [];
 	this.comments = [];
 	this.condition = 'consensus';		// 'consensus' 'majority'
-}
-
-function add_flow() {
-
-	counters.push([]);
-	var node_count = counters.length;
-
-	var line = '<div>Node ' + node_count + ' <span id="role_list_' + node_count + '"><a href="javascript:add_role(' + node_count + ')">Add Role</a></span></div>'; 
-	node_count++
-	var flow_list = document.getElementById("flow");
-	flow_list.innerHTML += line;
-}
-
-function save_flow() {
-	for (var i=0; i < counters.length; i++) {
-		var roles = counters[i];
-		for (var j=0; j < roles.length; j++) {
-			
-		}
+	
+	this.addRole = function (role) {
+		this.roles.push(role);
 	}
 }
 
-function add_role(node_id) {
+function add_flow() {
+	// check if document is available
+	if (!doc) {
+		if (document.getElementById("formID").value !== '') {
+			var formID = document.getElementById("formID").value;
+			doc = new Document(formID);
+		} else {
+			alert('need to input formID!');
+			return;
+		}
+	} 
 
-	console.log(node_id);
+	var flow_count = doc.flow_list.length;
+	var line = '<div>Node ' + flow_count + ' <span id="role_list_' + flow_count + '"><a href="javascript:add_role(' + flow_count + ')">Add Role</a></span></div>'; 
+	var flow_list = document.getElementById("flow");
+	flow_list.innerHTML += line;
 	
-	var roles = counters[node_id-1];
-	var role_count = roles.length;
+	// add new Flow object
+	doc.addFlow(new Flow());
+}
+
+
+function save_flow() {
+	alert('save flow');
+}
+
+var updateRole = function (flow_idx, role_idx) {
+
+	console.log('flow: ' + flow_idx + ' role: ' + role_idx);
+	var role = document.getElementById(flow_idx + "_" + role_idx).value;
 	
-	var line = '<span>Role ' + role_count + ' <input type="text" value="" id="flow' + (node_id-1) + '_' +  + '"></span>';
-	roles.push({});
-	console.log(counters);
+	if (role !== '') {
+		doc.flow_list[flow_idx][role_idx] = role;
+		
+		console.log(doc.flow_list);
+	}
+}
+
+function add_role(flow_idx) {
+
+	console.log(flow_idx);
 	
-	var role_list = document.getElementById("role_list_" + node_id);	
+	var flow = doc.flow_list[flow_idx];
+	var role_count = flow.roles.length;
+	
+	var rolebox_id = flow_idx + '_' + role_count;
+	console.log('rolebox: ' + rolebox_id);
+	var line = '<span>Role ' + role_count + ' <input type="text" value="" id="' + rolebox_id + '" onChange="javascript:updateRole(' + flow_idx + ', ' + role_count + ')"></span>';	
+	
+	var role_list = document.getElementById("role_list_" + flow_idx);
 	role_list.innerHTML += line;
+	
+	// store empty role
+	doc.flow_list[flow_idx].addRole('');
 }
 
 
